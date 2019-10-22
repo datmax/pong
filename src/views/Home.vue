@@ -8,6 +8,7 @@
 // @ is an alias to /src
 const width = window.innerWidth - 100;
 const height = window.innerHeight - 200;
+var moving = false;
 const blockSize = {
   x: 40,
   y: 15
@@ -18,7 +19,11 @@ export default {
       ctx: null,
       rect: {
         x: width / 2,
-        y: height - 10
+        y: height - 10,
+        rectWidth: 70,
+        rectHeight: 10,
+        maxSpeed: 10,
+        currentspeed: 0
       },
       ball: {
         x: 200.5,
@@ -43,24 +48,46 @@ export default {
       this.ctx.fillRect(this.rect.x, this.rect.y, 70, 10);
       this.initBlocks();
       this.initBall();
+      window.addEventListener("keyup", e => {
+        if (e.key == "ArrowLeft" || e.key == "ArrowRight") {
+          moving = false;
+        }
+      });
       window.addEventListener("keydown", e => {
-        switch (e.key) {
-          case "ArrowLeft":
-            window.requestAnimationFrame(() => this.moveRect(-10));
-            break;
-          case "ArrowRight":
-            window.requestAnimationFrame(() => this.moveRect(10));
-            break;
+        console.log(moving)
+        if (!moving) {
+          switch (e.key) {
+            case "ArrowLeft":
+              moving = true;
+              window.requestAnimationFrame(() => this.moveRect(-5));
+              break;
+            case "ArrowRight":
+              moving = true;
+              window.requestAnimationFrame(() => this.moveRect(5));
+              break;
+          }
         }
       });
     },
     moveRect(x) {
-      this.ctx.save();
-      console.log(x);
-      this.ctx.clearRect(this.rect.x, this.rect.y, 70, 10);
-      this.rect.x += x;
-      this.ctx.fillRect(this.rect.x, this.rect.y, 70, 10);
-      this.ctx.restore();
+      if(this.rect.currentspeed < this.rect.maxSpeed){
+        this.rect.currentspeed += x
+      }
+      this.ctx.clearRect(
+        this.rect.x,
+        this.rect.y,
+        this.rect.rectWidth,
+        this.rect.rectHeight
+      );
+      this.rect.x += x
+      this.ctx.fillRect(
+        this.rect.x,
+        this.rect.y,
+        this.rect.rectWidth,
+        this.rect.rectHeight
+      );
+      window.requestAnimationFrame(()=>{this.moveRect(x)})
+      
     },
     initBlocks() {
       this.ctx.fillStyle = "#0033cc";
@@ -87,6 +114,7 @@ export default {
       });
     },
     moveBall() {
+      //if(this.ball.y + )
       this.ctx.clearRect(
         this.ball.x - this.ball.radius * 2,
         this.ball.y - this.ball.radius * 2,
