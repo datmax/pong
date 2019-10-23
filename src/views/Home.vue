@@ -86,12 +86,6 @@ export default {
     },
     //-----BALL CONTROL-----//
     moveBall() {
-      //this.ctx.clearRect(0,0,width,height)
-      //if(this.ball.y + )
-      this.blockCollision();
-      if (this.playerCollision(this.ball)) {
-        this.ball.velocity.y = -this.ball.velocity.y;
-      }
       if (this.ball.x >= width - this.ball.radius) {
         this.ball.velocity.x = -this.ball.velocity.x;
       }
@@ -104,13 +98,8 @@ export default {
       if (this.ball.y > height) {
         //this.collided = "you lost";
       }
-      this.ball.x += 1 * this.ball.velocity.x;
-      this.ball.y += 1 * this.ball.velocity.y;
-
-      this.ctx.beginPath();
-      this.ctx.arc(this.ball.x, this.ball.y, this.ball.radius, 0, Math.PI * 2);
-      this.ctx.fill();
-      this.ctx.stroke();
+      this.ball.x += this.ball.velocity.x;
+      this.ball.y += this.ball.velocity.y;
     },
 
     //-----INITIALIZATIONS-----//
@@ -136,7 +125,7 @@ export default {
           obj.x - obj.radius >= this.rect.x &&
           obj.x + obj.radius <= this.rect.x + this.rect.rectWidth
         ) {
-          return true;
+          obj.velocity.y = -obj.velocity.y
         }
       } else {
         return false;
@@ -163,12 +152,13 @@ export default {
     },
     draw() {
       this.ctx.clearRect(0, 0, width, height);
-      this.moveBall();
-      this.moveRect(this.rect.speed);
-      this.drawBricks();
-      this.drawPlayer();
-      this.drawBall();
       this.blockCollision();
+      this.playerCollision(this.ball);
+      this.drawBricks();
+      this.moveBall();
+      this.moveRect();
+      this.drawBall();
+      this.drawPlayer();
       window.requestAnimationFrame(() => {
         this.draw();
       });
@@ -194,6 +184,7 @@ export default {
     drawBall() {
       this.ctx.beginPath();
       this.ctx.arc(this.ball.x, this.ball.y, this.ball.radius, 0, 2 * Math.PI);
+      this.ctx.fill();
       this.ctx.stroke();
     }
   }
