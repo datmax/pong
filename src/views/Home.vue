@@ -20,7 +20,7 @@ export default {
       hit: 0,
       ctx: null,
       rect: {
-        x: width / 2  - 200,
+        x: width / 2 - 200,
         y: height - 10,
         rectWidth: 70,
         rectHeight: 10,
@@ -56,26 +56,25 @@ export default {
         this.draw();
       });
       //this.initBall();
-      /*window.addEventListener("keyup", e => {
+      window.addEventListener("keyup", e => {
         if (e.key == "ArrowLeft" || e.key == "ArrowRight") {
-          cancelAnimationFrame(move);
+          this.rect.speed = 0;
         }
-      });*/
+      });
       window.addEventListener("keydown", e => {
         switch (e.key) {
           case "ArrowLeft":
-            this.moveRect(-velocity);
+            this.rect.speed = -velocity;
             break;
           case "ArrowRight":
-            this.moveRect(velocity);
+            this.rect.speed = velocity;
             break;
         }
       });
     },
 
     //----- RECT CONTROL-----//
-    moveRect(x) {
-      this.rect.speed = x;
+    moveRect() {
       if (this.rect.x >= width) {
         this.rect.x = 0;
       } else if (this.rect.x < -this.rect.rectWidth) {
@@ -122,18 +121,20 @@ export default {
             x: 10 + i,
             y: 10 + j * 40,
             width: blockSize.x,
-            height: blockSize.y,
-            status: 1
+            height: blockSize.y
           });
         }
       }
     },
     //-----COLLISIONS-----//
     playerCollision(obj) {
-      if (obj.y >= this.rect.y - this.rect.rectHeight && obj.y < this.rect.y) {
+      if (
+        obj.y + obj.radius >= this.rect.y &&
+        obj.y - obj.radius < this.rect.y - this.rect.rectHeight
+      ) {
         if (
-          obj.x >= this.rect.x &&
-          obj.x <= this.rect.x + this.rect.rectWidth
+          obj.x - obj.radius >= this.rect.x &&
+          obj.x + obj.radius <= this.rect.x + this.rect.rectWidth
         ) {
           return true;
         }
@@ -144,20 +145,18 @@ export default {
     blockCollision() {
       for (let i = this.blocks.length - 1; i >= 0; i--) {
         let block = this.blocks[i];
-        if (block.status == 1) {
+        if (
+          this.ball.x - this.ball.radius > block.x &&
+          this.ball.x + this.ball.radius < block.x + block.width
+        ) {
           if (
-            this.ball.x - this.ball.radius > block.x &&
-            this.ball.x + this.ball.radius < block.x + block.width
+            this.ball.y + this.ball.radius > block.y &&
+            this.ball.y - this.ball.radius < block.y + block.height
           ) {
-            if (
-              this.ball.y + this.ball.radius > block.y &&
-              this.ball.y - this.ball.radius < block.y + block.height
-            ) {
-              this.hit++;
-              block.status = 0;
-              this.ball.velocity.y = -this.ball.velocity.y;
-              this.blocks.splice(i, 1);
-            }
+            this.hit++;
+            block.status = 0;
+            this.ball.velocity.y = -this.ball.velocity.y;
+            this.blocks.splice(i, 1);
           }
         }
       }
@@ -165,6 +164,7 @@ export default {
     draw() {
       this.ctx.clearRect(0, 0, width, height);
       this.moveBall();
+      this.moveRect(this.rect.speed);
       this.drawBricks();
       this.drawPlayer();
       this.drawBall();
@@ -174,7 +174,6 @@ export default {
       });
     },
     drawBricks() {
-      console.log(this.blocks)
       for (let i = 0; i < this.blocks.length; i++) {
         this.ctx.fillRect(
           this.blocks[i].x,
