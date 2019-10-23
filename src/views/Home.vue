@@ -10,8 +10,6 @@
 const width = window.innerWidth - 100;
 const height = window.innerHeight - 200;
 const velocity = 6;
-var move = null;
-var ball = null;
 const blockSize = {
   x: 40,
   y: 15
@@ -22,7 +20,7 @@ export default {
       hit: 0,
       ctx: null,
       rect: {
-        x: width / 2,
+        x: width / 2 - 200,
         y: height - 10,
         rectWidth: 70,
         rectHeight: 10,
@@ -53,41 +51,30 @@ export default {
       this.ctx.canvas.width = width;
       this.ctx.canvas.height = height;
       this.ctx.clearRect(0, 0, 300, 300);
-      this.ctx.fillRect(this.rect.x, this.rect.y, 70, 10);
       this.initBlocks();
-      this.initBall();
-      /*window.addEventListener("keyup", e => {
+      window.requestAnimationFrame(() => {
+        this.draw();
+      });
+      //this.initBall();
+      window.addEventListener("keyup", e => {
         if (e.key == "ArrowLeft" || e.key == "ArrowRight") {
-          cancelAnimationFrame(move);
+          this.rect.speed = 0;
         }
-      });*/
+      });
       window.addEventListener("keydown", e => {
         switch (e.key) {
           case "ArrowLeft":
-            if (move !== null) {
-              cancelAnimationFrame(move);
-            }
-            window.requestAnimationFrame(() => this.moveRect(-velocity));
+            this.rect.speed = -velocity;
             break;
           case "ArrowRight":
-            if (move !== null) {
-              cancelAnimationFrame(move);
-            }
-            window.requestAnimationFrame(() => this.moveRect(velocity));
+            this.rect.speed = velocity;
             break;
         }
       });
     },
 
     //----- RECT CONTROL-----//
-    moveRect(x) {
-      this.rect.speed = x;
-      this.ctx.clearRect(
-        this.rect.x,
-        this.rect.y,
-        this.rect.rectWidth,
-        this.rect.rectHeight
-      );
+    moveRect() {
       if (this.rect.x >= width) {
         this.rect.x = 0;
       } else if (this.rect.x < -this.rect.rectWidth) {
@@ -96,30 +83,9 @@ export default {
         this.rect.x += 1 * this.rect.speed;
       }
       this.rect.x += 1 * this.rect.speed;
-      this.ctx.fillRect(
-        this.rect.x,
-        this.rect.y,
-        this.rect.rectWidth,
-        this.rect.rectHeight
-      );
-      move = window.requestAnimationFrame(() => {
-        this.moveRect(x);
-      });
     },
     //-----BALL CONTROL-----//
     moveBall() {
-      //this.ctx.clearRect(0,0,width,height)
-      //if(this.ball.y + )
-      this.ctx.clearRect(
-        this.ball.x - this.ball.radius * 2,
-        this.ball.y - this.ball.radius * 2,
-        this.ball.radius * Math.PI,
-        this.ball.radius * Math.PI
-      );
-      this.blockCollision();
-      if (this.playerCollision(this.ball)) {
-        this.ball.velocity.y = -this.ball.velocity.y;
-      }
       if (this.ball.x >= width - this.ball.radius) {
         this.ball.velocity.x = -this.ball.velocity.x;
       }
@@ -130,53 +96,36 @@ export default {
         this.ball.velocity.y = -this.ball.velocity.y;
       }
       if (this.ball.y > height) {
-        cancelAnimationFrame(ball);
         //this.collided = "you lost";
       }
-      this.ball.x += 1 * this.ball.velocity.x;
-      this.ball.y += 1 * this.ball.velocity.y;
-
-      this.ctx.beginPath();
-      this.ctx.arc(this.ball.x, this.ball.y, this.ball.radius, 0, Math.PI * 2);
-      this.ctx.fill();
-      this.ctx.stroke();
-      ball = window.requestAnimationFrame(() => {
-        this.moveBall();
-      });
+      this.ball.x += this.ball.velocity.x;
+      this.ball.y += this.ball.velocity.y;
     },
 
     //-----INITIALIZATIONS-----//
     initBlocks() {
       for (let i = 0; i < width - blockSize.x; i += blockSize.x + 10) {
         for (let j = 1; j < 4; j++) {
-          this.ctx.fillRect(10 + i, 10 + j * 40, blockSize.x, blockSize.y);
           this.blocks.push({
             x: 10 + i,
             y: 10 + j * 40,
             width: blockSize.x,
-            height: blockSize.y,
-            status: 1
+            height: blockSize.y
           });
         }
       }
     },
-    initBall() {
-      this.ctx.fillStyle = "#000000";
-      this.ctx.arc(this.ball.x, this.ball.y, this.ball.radius, 0, Math.PI * 2);
-      //this.ctx.fill();
-      this.ctx.stroke();
-      window.requestAnimationFrame(() => {
-        this.moveBall();
-      });
-    },
     //-----COLLISIONS-----//
     playerCollision(obj) {
-      if (obj.y >= this.rect.y - this.rect.rectHeight && obj.y < this.rect.y) {
+      if (
+        obj.y + obj.radius >= this.rect.y &&
+        obj.y - obj.radius < this.rect.y - this.rect.rectHeight
+      ) {
         if (
-          obj.x >= this.rect.x &&
-          obj.x <= this.rect.x + this.rect.rectWidth
+          obj.x - obj.radius >= this.rect.x &&
+          obj.x + obj.radius <= this.rect.x + this.rect.rectWidth
         ) {
-          return true;
+          obj.velocity.y = -obj.velocity.y
         }
       } else {
         return false;
@@ -185,21 +134,58 @@ export default {
     blockCollision() {
       for (let i = this.blocks.length - 1; i >= 0; i--) {
         let block = this.blocks[i];
-        if (block.status == 1) {
-          if (this.ball.x-this.ball.radius > block.x && this.ball.x+this.ball.radius < block.x + block.width) {
-            if (
-              this.ball.y + this.ball.radius >= block.y &&
-              this.ball.y - this.ball.radius <= block.y + block.height
-            ) {
-              this.hit++;
-              block.status = 0;
-              this.ball.velocity.y = -this.ball.velocity.y;
-              this.ctx.clearRect(block.x, block.y, block.width, block.height);
-            }
+        if (
+          this.ball.x - this.ball.radius > block.x &&
+          this.ball.x + this.ball.radius < block.x + block.width
+        ) {
+          if (
+            this.ball.y + this.ball.radius > block.y &&
+            this.ball.y - this.ball.radius < block.y + block.height
+          ) {
+            this.hit++;
+            block.status = 0;
+            this.ball.velocity.y = -this.ball.velocity.y;
+            this.blocks.splice(i, 1);
           }
-          
         }
       }
+    },
+    draw() {
+      this.ctx.clearRect(0, 0, width, height);
+      this.blockCollision();
+      this.playerCollision(this.ball);
+      this.drawBricks();
+      this.moveBall();
+      this.moveRect();
+      this.drawBall();
+      this.drawPlayer();
+      window.requestAnimationFrame(() => {
+        this.draw();
+      });
+    },
+    drawBricks() {
+      for (let i = 0; i < this.blocks.length; i++) {
+        this.ctx.fillRect(
+          this.blocks[i].x,
+          this.blocks[i].y,
+          this.blocks[i].width,
+          this.blocks[i].height
+        );
+      }
+    },
+    drawPlayer() {
+      this.ctx.fillRect(
+        this.rect.x,
+        this.rect.y,
+        this.rect.rectWidth,
+        this.rect.rectHeight
+      );
+    },
+    drawBall() {
+      this.ctx.beginPath();
+      this.ctx.arc(this.ball.x, this.ball.y, this.ball.radius, 0, 2 * Math.PI);
+      this.ctx.fill();
+      this.ctx.stroke();
     }
   }
 };
