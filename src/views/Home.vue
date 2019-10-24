@@ -1,6 +1,7 @@
 <template>
   <div class="home">
-    <canvas id="canvas"></canvas>
+    <canvas id="layer0"></canvas>
+    <canvas id="layer1"></canvas>
   </div>
 </template>
 
@@ -18,6 +19,7 @@ export default {
     return {
       hit: 0,
       ctx: null,
+      l2: null,
       rect: {
         x: width / 2 - 200,
         y: height - 10,
@@ -31,8 +33,8 @@ export default {
         y: 300,
         radius: 8,
         velocity: {
-          x: 3,
-          y: 3
+          x: 4,
+          y: 4
         }
       },
       blocks: []
@@ -45,7 +47,10 @@ export default {
 
   methods: {
     init() {
-      this.ctx = document.getElementById("canvas").getContext("2d");
+      this.ctx = document.getElementById("layer0").getContext("2d");
+      this.l2 = document.getElementById("layer1").getContext("2d");
+      this.l2.canvas.width = width;
+      this.l2.canvas.height = height;
       this.ctx.imageSmoothingEnabled = false;
       this.ctx.canvas.width = width;
       this.ctx.canvas.height = height;
@@ -106,41 +111,32 @@ export default {
           this.ball.y < height - this.rect.rectHeight / 2
         ) {
           if (
-            this.ball.x - this.ball.radius >= this.rect.x &&
-            this.ball.x + this.ball.radius <= this.rect.x + this.rect.rectWidth
+            this.ball.x +this.ball.radius >= this.rect.x &&
+            this.ball.x - this.ball.radius <= this.rect.x + this.rect.rectWidth
           ) {
+            console.log(Math.abs(this.ball.x - this.rect.x));
+            if (Math.abs(this.ball.x - this.rect.x) < this.ball.radius * 2) {
+              if (
+                this.ball.x < this.rect.x + this.ball.radius * 2 &&
+                this.ball.velocity.x > 0
+              ) {
+                this.ball.velocity.x = -this.ball.velocity.x;
+              }
+            }
+            if (
+              Math.abs(this.ball.x - this.rect.x - this.rect.rectWidth) <
+              this.ball.radius * 2
+            ) {
+              if (
+                this.ball.x >
+                  this.rect.x + (this.rect.rectWidth - this.ball.radius * 2) &&
+                this.ball.velocity.x < 0
+              ) {
+                this.ball.velocity.x = -this.ball.velocity.x;
+              }
+            }
             this.ball.velocity.y = -this.ball.velocity.y;
             this.ball.y -= 5;
-          }
-        } else {
-          if (
-            Math.abs(this.ball.x - this.rect.x) < this.ball.radius &&
-            Math.abs(this.ball.y - this.rect.y) < this.ball.radius
-          ) {
-            if (
-              (this.ball.velocity.x > 0 && this.rect.speed > 0) ||
-              (this.ball.velocity.x < 0 && this.rect.speed < 0)
-            ) {
-              this.ball.velocity.y = -this.ball.velocity.y;
-            } else {
-              this.ball.velocity.x = -this.ball.velocity.x;
-              this.ball.velocity.y = -this.ball.velocity.y;
-            }
-          }
-          if (
-            Math.abs(this.ball.x - this.rect.x + this.rect.rectWidth) <
-              this.ball.radius &&
-            Math.abs(this.ball.y - this.rect.y) < this.ball.radius
-          ) {
-            if (
-              (this.ball.velocity.x > 0 && this.rect.speed > 0) ||
-              (this.ball.velocity.x < 0 && this.rect.speed < 0)
-            ) {
-              this.ball.velocity.y = -this.ball.velocity.y;
-            } else {
-              this.ball.velocity.y = -this.ball.velocity.y;
-              this.ball.velocity.x = -this.ball.velocity.x;
-            }
           }
         }
       }
@@ -172,7 +168,7 @@ export default {
               this.ball.y + this.ball.radius >= block.y &&
               this.ball.y - this.ball.radius < block.y + block.height
             ) {
-              console.log("hello");
+              this.ball.y += 2;
               this.ball.velocity.y = -this.ball.velocity.y;
               this.blocks.splice(i, 1);
             }
@@ -182,12 +178,12 @@ export default {
     },
     draw() {
       this.ctx.clearRect(0, 0, width, height);
+      this.moveRect();
       this.blockCollision();
       this.ballCollision();
       this.drawBricks();
       this.drawBall();
       this.drawPlayer();
-      this.moveRect();
 
       window.requestAnimationFrame(() => {
         this.draw();
@@ -220,4 +216,11 @@ export default {
   }
 };
 </script>
-<style></style>
+<style>
+#layer0 {
+  z-index: 0;
+}
+#layer1 {
+  z-index: 1;
+}
+</style>
