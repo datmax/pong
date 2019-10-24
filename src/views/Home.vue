@@ -114,7 +114,7 @@ export default {
             this.ball.x +this.ball.radius >= this.rect.x &&
             this.ball.x - this.ball.radius <= this.rect.x + this.rect.rectWidth
           ) {
-            if (Math.abs(this.ball.x - this.rect.x) < this.ball.radius * 2) {
+            if (Math.abs(this.ball.x - this.rect.x) < this.ball.radius * 2){
               if (
                 this.ball.x < this.rect.x + this.ball.radius * 2 &&
                 this.ball.velocity.x > 0
