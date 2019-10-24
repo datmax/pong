@@ -114,7 +114,6 @@ export default {
             this.ball.x +this.ball.radius >= this.rect.x &&
             this.ball.x - this.ball.radius <= this.rect.x + this.rect.rectWidth
           ) {
-            console.log(Math.abs(this.ball.x - this.rect.x));
             if (Math.abs(this.ball.x - this.rect.x) < this.ball.radius * 2) {
               if (
                 this.ball.x < this.rect.x + this.ball.radius * 2 &&
