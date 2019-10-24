@@ -142,7 +142,7 @@ export default {
       if (this.ball.x >= width - this.ball.radius) {
         this.ball.velocity.x = -this.ball.velocity.x;
       }
-      if (this.ball.x <= 0) {
+      if (this.ball.x <= 0 + this.ball.radius) {
         this.ball.velocity.x = -this.ball.velocity.x;
       }
       if (this.ball.y <= 0 + this.ball.radius) {
