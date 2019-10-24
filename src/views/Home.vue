@@ -1,7 +1,7 @@
 <template>
   <div class="home">
-    <p>{{ hit }}</p>
-    <canvas id="canvas"></canvas>
+    <canvas id="layer0"></canvas>
+    <canvas id="layer1"></canvas>
   </div>
 </template>
 
@@ -19,6 +19,7 @@ export default {
     return {
       hit: 0,
       ctx: null,
+      l2: null,
       rect: {
         x: width / 2 - 200,
         y: height - 10,
@@ -32,8 +33,8 @@ export default {
         y: 300,
         radius: 8,
         velocity: {
-          x: 3,
-          y: 3
+          x: 4,
+          y: 4
         }
       },
       blocks: []
@@ -46,7 +47,10 @@ export default {
 
   methods: {
     init() {
-      this.ctx = document.getElementById("canvas").getContext("2d");
+      this.ctx = document.getElementById("layer0").getContext("2d");
+      this.l2 = document.getElementById("layer1").getContext("2d");
+      this.l2.canvas.width = width;
+      this.l2.canvas.height = height;
       this.ctx.imageSmoothingEnabled = false;
       this.ctx.canvas.width = width;
       this.ctx.canvas.height = height;
@@ -85,22 +89,6 @@ export default {
       this.rect.x += 1 * this.rect.speed;
     },
     //-----BALL CONTROL-----//
-    moveBall() {
-      if (this.ball.x >= width - this.ball.radius) {
-        this.ball.velocity.x = -this.ball.velocity.x;
-      }
-      if (this.ball.x <= 0) {
-        this.ball.velocity.x = -this.ball.velocity.x;
-      }
-      if (this.ball.y <= 0 + this.ball.radius) {
-        this.ball.velocity.y = -this.ball.velocity.y;
-      }
-      if (this.ball.y > height) {
-        //this.collided = "you lost";
-      }
-      this.ball.x += this.ball.velocity.x;
-      this.ball.y += this.ball.velocity.y;
-    },
 
     //-----INITIALIZATIONS-----//
     initBlocks() {
@@ -116,49 +104,86 @@ export default {
       }
     },
     //-----COLLISIONS-----//
-    playerCollision(obj) {
-      if (
-        obj.y + obj.radius >= this.rect.y &&
-        obj.y - obj.radius < this.rect.y - this.rect.rectHeight
-      ) {
+    ballCollision() {
+      if (this.ball.y > height - 20) {
         if (
-          obj.x - obj.radius >= this.rect.x &&
-          obj.x + obj.radius <= this.rect.x + this.rect.rectWidth
-        ) {
-          obj.velocity.y = -obj.velocity.y
-        }
-      } else {
-        return false;
-      }
-    },
-    blockCollision() {
-      for (let i = this.blocks.length - 1; i >= 0; i--) {
-        let block = this.blocks[i];
-        if (
-          this.ball.x - this.ball.radius > block.x &&
-          this.ball.x + this.ball.radius < block.x + block.width
+          this.ball.y + this.ball.radius >= this.rect.y &&
+          this.ball.y < height - this.rect.rectHeight / 2
         ) {
           if (
-            this.ball.y + this.ball.radius > block.y &&
-            this.ball.y - this.ball.radius < block.y + block.height
+            this.ball.x +this.ball.radius >= this.rect.x &&
+            this.ball.x - this.ball.radius <= this.rect.x + this.rect.rectWidth
           ) {
-            this.hit++;
-            block.status = 0;
+            if (Math.abs(this.ball.x - this.rect.x) < this.ball.radius * 2) {
+              if (
+                this.ball.x < this.rect.x + this.ball.radius * 2 &&
+                this.ball.velocity.x > 0
+              ) {
+                this.ball.velocity.x = -this.ball.velocity.x;
+              }
+            }
+            if (
+              Math.abs(this.ball.x - this.rect.x - this.rect.rectWidth) <
+              this.ball.radius * 2
+            ) {
+              if (
+                this.ball.x >
+                  this.rect.x + (this.rect.rectWidth - this.ball.radius * 2) &&
+                this.ball.velocity.x < 0
+              ) {
+                this.ball.velocity.x = -this.ball.velocity.x;
+              }
+            }
             this.ball.velocity.y = -this.ball.velocity.y;
-            this.blocks.splice(i, 1);
+            this.ball.y -= 5;
+          }
+        }
+      }
+      if (this.ball.x >= width - this.ball.radius) {
+        this.ball.velocity.x = -this.ball.velocity.x;
+      }
+      if (this.ball.x <= 0 + this.ball.radius) {
+        this.ball.velocity.x = -this.ball.velocity.x;
+      }
+      if (this.ball.y <= 0 + this.ball.radius) {
+        this.ball.velocity.y = -this.ball.velocity.y;
+      }
+      if (this.ball.y > height) {
+        //this.collided = "you lost";
+      }
+
+      this.ball.x += this.ball.velocity.x;
+      this.ball.y += this.ball.velocity.y;
+    },
+    blockCollision() {
+      if (this.ball.y < height / 2) {
+        for (let i = this.blocks.length - 1; i >= 0; i--) {
+          let block = this.blocks[i];
+          if (
+            this.ball.x - this.ball.radius > block.x &&
+            this.ball.x + this.ball.radius < block.x + block.width
+          ) {
+            if (
+              this.ball.y + this.ball.radius >= block.y &&
+              this.ball.y - this.ball.radius < block.y + block.height
+            ) {
+              this.ball.y += 2;
+              this.ball.velocity.y = -this.ball.velocity.y;
+              this.blocks.splice(i, 1);
+            }
           }
         }
       }
     },
     draw() {
       this.ctx.clearRect(0, 0, width, height);
-      this.blockCollision();
-      this.playerCollision(this.ball);
-      this.drawBricks();
-      this.moveBall();
       this.moveRect();
+      this.blockCollision();
+      this.ballCollision();
+      this.drawBricks();
       this.drawBall();
       this.drawPlayer();
+
       window.requestAnimationFrame(() => {
         this.draw();
       });
@@ -191,7 +216,10 @@ export default {
 };
 </script>
 <style>
-canvas {
-  border: 1px solid black;
+#layer0 {
+  z-index: 0;
+}
+#layer1 {
+  z-index: 1;
 }
 </style>
