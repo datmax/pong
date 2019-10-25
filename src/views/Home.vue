@@ -31,7 +31,7 @@ export default {
       ball: {
         x: 300,
         y: 300,
-        radius: 8,
+        radius: 5.5,
         velocity: {
           x: 4,
           y: 4
@@ -111,15 +111,16 @@ export default {
           this.ball.y < height - this.rect.rectHeight / 2
         ) {
           if (
-            this.ball.x +this.ball.radius >= this.rect.x &&
+            this.ball.x + this.ball.radius >= this.rect.x &&
             this.ball.x - this.ball.radius <= this.rect.x + this.rect.rectWidth
           ) {
-            if (Math.abs(this.ball.x - this.rect.x) < this.ball.radius * 2){
+            if (Math.abs(this.ball.x - this.rect.x) < this.ball.radius * 2) {
               if (
                 this.ball.x < this.rect.x + this.ball.radius * 2 &&
                 this.ball.velocity.x > 0
               ) {
                 this.ball.velocity.x = -this.ball.velocity.x;
+                this.ball.velocity.y = this.ball.velocity.y;
               }
             }
             if (
@@ -131,7 +132,8 @@ export default {
                   this.rect.x + (this.rect.rectWidth - this.ball.radius * 2) &&
                 this.ball.velocity.x < 0
               ) {
-                this.ball.velocity.x = -this.ball.velocity.x;
+                this.ball.velocity.x = -this.ball.velocity.x * 2;
+                this.ball.velocity.y = this.ball.velocity.y / 2;
               }
             }
             this.ball.velocity.y = -this.ball.velocity.y;
@@ -155,22 +157,62 @@ export default {
       this.ball.x += this.ball.velocity.x;
       this.ball.y += this.ball.velocity.y;
     },
+
     blockCollision() {
       if (this.ball.y < height / 2) {
         for (let i = this.blocks.length - 1; i >= 0; i--) {
           let block = this.blocks[i];
+          //TOP COLLISION
           if (
-            this.ball.x - this.ball.radius > block.x &&
+            this.ball.y + this.ball.radius * 2 >= block.y &&
+            this.ball.y + this.ball.radius * 2 <=
+              block.y + block.height * 0.7 &&
+            this.ball.y - this.ball.radius - block.y < 0 &&
+            this.ball.x + this.ball.radius > block.x &&
             this.ball.x + this.ball.radius < block.x + block.width
           ) {
-            if (
-              this.ball.y + this.ball.radius >= block.y &&
-              this.ball.y - this.ball.radius < block.y + block.height
-            ) {
-              this.ball.y += 2;
-              this.ball.velocity.y = -this.ball.velocity.y;
-              this.blocks.splice(i, 1);
-            }
+            //console.log("top!");
+            this.ball.y -= 5;
+            this.ball.velocity.y = -this.ball.velocity.y;
+            this.blocks.splice(i, 1);
+          }
+          //BOTTOM COLLISION
+          else if (
+            this.ball.x + this.ball.radius * 2 > block.x &&
+            this.ball.x + this.ball.radius * 2 < block.x + block.width &&
+            this.ball.y <= block.y + block.height &&
+            this.ball.y >= block.y + block.height * 0.7 &&
+            this.ball.y - this.ball.radius - block.y + block.height > 0
+          ) {
+            //console.log("bottom!");
+            this.ball.y += 5;
+            this.ball.velocity.y = -this.ball.velocity.y;
+            this.blocks.splice(i, 1);
+          }
+          //RIGHT COLLISION
+          else if (
+            this.ball.y + this.ball.radius > block.y &&
+            this.ball.y + this.ball.radius < block.y + block.height &&
+            this.ball.x - this.ball.radius <= block.x + block.width &&
+            this.ball.x - this.ball.radius >=
+              block.x + block.width - block.height
+          ) {
+            //console.log("right!");
+            this.ball.x += 2;
+            this.ball.velocity.x = -this.ball.velocity.x;
+            this.blocks.splice(i, 1);
+          }
+          //LEFT COLLISION
+          else if (
+            this.ball.y + this.ball.radius > block.y &&
+            this.ball.y + this.ball.radius < block.y + block.height &&
+            this.ball.x + this.ball.radius >= block.x &&
+            this.ball.x + this.ball.radius <= block.x + block.height
+          ) {
+            //console.log("left!");
+            this.ball.x -= 2;
+            this.ball.velocity.x = -this.ball.velocity.x;
+            this.blocks.splice(i, 1);
           }
         }
       }
